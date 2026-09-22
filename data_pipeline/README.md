@@ -1,6 +1,6 @@
-Data Pipeline
+# Data Pipeline
 
-Overview
+## Overview
 
 This module implements an end-to-end data engineering pipeline using the public `books.toscrape.com` scraping-practice website.
 
@@ -14,7 +14,7 @@ The pipeline performs the following steps:
 6. Execute SQL queries demonstrating the required SQL operations.
 7. Validate SQL results against pandas operations.
 
-Dataset
+## Dataset
 
 The pipeline scrapes three categories:
 
@@ -22,11 +22,11 @@ The pipeline scrapes three categories:
 * Mystery — 32 books
 * Historical Fiction — 26 books
 
-Total books scraped: 69
+Total books scraped: **69**
 
 The scraper automatically follows pagination links until the final page of each selected category.
 
-Scraped Fields
+## Scraped Fields
 
 The raw scraper collects:
 
@@ -36,11 +36,11 @@ The raw scraper collects:
 * `availability`
 * `category`
 
-Data Cleaning
+## Data Cleaning
 
 The following transformations are applied:
 
-Price
+### Price
 
 The original price is scraped as text containing a currency symbol.
 
@@ -48,33 +48,33 @@ Non-numeric characters are removed and the result is converted to the `float` co
 
 If a price fails to parse, the median `price_gbp` is used for imputation.
 
-Rating
+### Rating
 
 The text ratings `One`, `Two`, `Three`, `Four`, and `Five` are mapped to integers from 1 to 5.
 
 If an unexpected rating fails to parse, the median rating is used and rounded to the nearest integer.
 
-Availability
+### Availability
 
 The availability text is converted to the boolean column `in_stock`.
 
 Values containing `In stock` are represented as `True`; other values are represented as `False`.
 
-Currency Conversion
+### Currency Conversion
 
 The project-defined fixed conversion rate is:
 
-1 GBP = 105.50 INR
+**1 GBP = 105.50 INR**
 
 The `price_inr` column is calculated as:
 
-```
+```text
 price_inr = price_gbp × 105.50
 ```
 
 No external currency API is used.
 
-Data Quality
+## Data Quality
 
 The final dataset contains:
 
@@ -89,18 +89,18 @@ Cleaned column types include:
 * `in_stock` — boolean
 * `price_inr` — float
 
- Database Design
+## Database Design
 
 The data is stored in SQLite using two normalized tables.
 
-`categories`
+### `categories`
 
 | Column          | Type    | Constraint       |
 | --------------- | ------- | ---------------- |
 | `category_id`   | INTEGER | Primary Key      |
 | `category_name` | TEXT    | UNIQUE, NOT NULL |
 
-`books`
+### `books`
 
 | Column        | Type    | Constraint  |
 | ------------- | ------- | ----------- |
@@ -123,7 +123,7 @@ books.category_id
 
 The category name is stored once in the `categories` table rather than repeated for every book.
 
-SQL Queries
+## SQL Queries
 
 Six SQL queries are implemented in `queries.py`.
 
@@ -142,7 +142,7 @@ The executed SQL statements and their outputs are saved in:
 query_results.txt
 ```
 
-Pandas Validation
+## Pandas Validation
 
 The SQL results are read into pandas using `pd.read_sql()`.
 
@@ -160,7 +160,7 @@ JOIN SQL and pd.merge() equivalent: True
 
 This confirms that the relational JOIN and its pandas equivalent produce matching results.
 
-Files
+## Files
 
 ```text
 data_pipeline/
@@ -173,11 +173,11 @@ data_pipeline/
 └── README.md
 ```
 
-How to Run
+## How to Run
 
 From the project root:
 
-1. Run the complete scraping and database pipeline
+### 1. Run the complete scraping and database pipeline
 
 ```powershell
 python data_pipeline\scrape_and_load.py
@@ -185,13 +185,13 @@ python data_pipeline\scrape_and_load.py
 
 This scrapes the selected categories, cleans the data, performs the GBP-to-INR conversion, and recreates the SQLite database.
 
-2. Verify the database
+### 2. Verify the database
 
 ```powershell
 python data_pipeline\check_database.py
 ```
 
-3. Run the SQL queries
+### 3. Run the SQL queries
 
 ```powershell
 python data_pipeline\queries.py
@@ -203,7 +203,7 @@ The query output is saved to:
 data_pipeline/query_results.txt
 ```
 
-4. Validate SQL against pandas
+### 4. Validate SQL against pandas
 
 ```powershell
 python data_pipeline\validate_pandas.py
