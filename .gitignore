@@ -30,3 +30,8 @@ dist/
 
 # Model/cache files
 .cache/
+
+
+
+# ChromaDB
+support_assistant/chroma_db/
