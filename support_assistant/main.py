@@ -191,12 +191,10 @@ def retrieve_and_answer(state: AssistantState) -> AssistantState:
     Retrieve the top-3 policy chunks from ChromaDB and
     generate the required mock response.
     """
-
     query = state["query"]
 
     # Retrieval always happens in both modes.
     query_embedding = embed_query(query)
-
     results = collection.query(
         query_embeddings=query_embedding,
         n_results=3,
@@ -235,9 +233,6 @@ def retrieve_and_answer(state: AssistantState) -> AssistantState:
 
     else:
         # Optional real-LLM extension.
-        #
-        # The real LLM integration can be added here while
-        # keeping retrieval independent from the LLM.
         context = "\n\n".join(documents)
 
         prompt = PROMPT_TEMPLATE.format(
@@ -247,12 +242,41 @@ def retrieve_and_answer(state: AssistantState) -> AssistantState:
 
         # Placeholder until an optional real LLM provider
         # is configured.
-        answer = (
-            "Real LLM mode is not configured. "
-            f"Retrieved context: {documents[0][:200].strip()}"
-        )
+        #
+        # The response is validated using the required
+        # Pydantic schema. The loop allows one initial
+        # attempt plus up to 2 additional retries if
+        # validation fails.
+        answer = None
+        confidence = None
 
-        confidence = 1.0
+        for attempt in range(3):
+            candidate = {
+                "answer": (
+                    "Real LLM mode is not configured. "
+                    f"Retrieved context: "
+                    f"{documents[0][:200].strip()}"
+                ),
+                "sources": sources,
+                "confidence": 1.0,
+            }
+
+            try:
+                validated = AskResponse(**candidate)
+
+                answer = validated.answer
+                confidence = validated.confidence
+
+                break
+
+            except Exception:
+                if attempt == 2:
+                    raise
+
+        if answer is None or confidence is None:
+            raise ValueError(
+                "LLM response failed validation after 3 attempts."
+            )
 
     return {
         **state,
@@ -262,7 +286,6 @@ def retrieve_and_answer(state: AssistantState) -> AssistantState:
         "sources": sources,
         "confidence": confidence,
     }
-
 
 # =========================================================
 # NODE 3 — DIRECT ANSWER
